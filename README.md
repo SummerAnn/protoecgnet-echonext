@@ -12,13 +12,46 @@ Run the Code: Use echonext_protoecg_adaptation.py--mode train to train, --mode e
 
 ### Experimental Planning and Evaluations
 
-# Experiment 1: Evaluate Pre-Trained PTB-XL Model on EchoNext (Correlation Check)
+# Experiment 1: Evaluate Pre-Trained PTB-XL Model on EchoNext 
 
 ### Hypothesis
-PTB-XL embeddings and prototypes, trained on direct ECG classification labels, will show moderate correlations with EchoNext SHD labels due to overlapping patterns (e.g., hypertrophy in PTB-XL may align with low LVEF in SHD). This tests indirect transferability without retraining, hypothesizing correlations >0.3 for key labels like valve diseases, revealing if PTB-XL captures SHD signals implicitly.
+prototype-based embeddings from ECG models like ProtoECGNet can capture latent patterns useful for tasks beyond direct ECG classification, such as predicting structural heart disease (SHD) labels from the EchoNext dataset, where clinical correlations are not well-understood. Specifically, we hypothesize that:
+
+Prototypes learned on standard ECG tasks (e.g., PTB-XL labels) will show moderate correlations with SHD outcomes in EchoNext, as indirect features like hypertrophy or conduction delays may align with structural abnormalities.
+Scaling the prototype method to larger datasets with lower-quality labels (e.g., machine-generated or fewer classes) will improve embedding generalizability, following data scaling laws where increased data size compensates for label noise, leading to better performance on SHD prediction (measured by embedding quality) while maintaining strong results on PTB-XL for direct classification.
+Moving toward self-supervised prototype approaches will further enhance embeddings for unseen tasks like SHD, by leveraging unlabeled data to learn more robust representations, potentially matching or exceeding supervised SOTA on embedding quality metrics
+
+
+
+
+Experimental Design
+The design follows a phased, iterative approach with clear controls, evaluations, and documentation to address feedback on planning. Experiments will be documented in the repo's experiments/ folder as Markdown files (e.g., experiment_1.md), reviewed via GitHub issues/PRs before execution. We'll use the 4 datasets mentioned (assuming PTB-XL, EchoNext, and 2 others like MIMIC-IV-ECG/Harvard-Emory with varying size/quality) for scaling tests. No new modeling until plans are approved. Timeline: Phase 1 (1 week), Phase 2 (2 weeks), Phase 3 (ongoing iteration).
+Phase 1: Baseline Correlation Check (No Training)
+
+Methods/Setup: Load pre-trained ProtoECGNet weights from PTB-XL (Sahil's shared model). Extract embeddings and prototype activations from EchoNext (all splits: train ~72k, val ~4.6k, test ~5.4k) via forward pass (no gradients, batch 64 on GPU). Use adapted loader for preprocessing (downsample to 100 Hz, filter, standardize). Compute Spearman correlations between activations/embeddings and SHD flags; train scikit-learn LogisticRegression probe on train embeddings for SHD prediction, evaluate on val/test.
+Controls/Baselines: Random embeddings (Gaussian noise, same dim) as null (expected AUROC ~0.5, correlations ~0); non-prototype ResNet (PTB-XL pre-trained) for comparison.
+Evaluations/Metrics: Spearman rho/p-values per label (scipy.stats, aim >0.3 moderate); macro/per-label AUROC (sklearn roc_auc_score, with bootstrapped CIs vs. EchoNext paper SOTA ~0.8/random 0.5); t-SNE viz of embeddings by SHD (sklearn.manifold, inspect clusters). Full curves N/A for zero-shot; report in notebook with plots/heatmaps.
+Iteration/Risks: If correlations <0.3, subset to PTB-XL branches (e.g., morphology only); mitigate low signal with qualitative viz. Revise via issue if major (e.g., add dimensionality reduction before probe).
+Outputs/Timeline: Notebook with results/plots, saved to /results/experiment_1/; 1-2 days (extraction today, analysis tomorrow).
+
+Phase 2: Prototype Application and Descriptive Study on EchoNext
+
+Methods/Setup: Apply ProtoECGNet to EchoNext (start with PTB-XL pre-trained, fine-tune if correlations from Phase 1 warrant). Use 2D global branch for diffuse SHD; project prototypes to real ECG segments (repo's push.py style).
+Controls/Baselines: Scratch-trained model on EchoNext; ablations (no contrastive) to isolate prototype value.
+Evaluations/Metrics: Prototype quality via manual review (paper's rubric: representativeness/clarity on top-K matches); embedding quality via linear probe AUROC (as Phase 1); loss curves/components over epochs (TensorBoard exports, reference paper's PTB-XL loss trends). Compare to Phase 1 zero-shot.
+Iteration/Risks: If prototypes not meaningful, increase per-class count or add morphology; mitigate imbalance with weighted BCE.
+Outputs/Timeline: Descriptive report with projected ECG viz; 3-5 days after Phase 1.
+
+Phase 3: Generalization and Scaling Experiments
+
+Methods/Setup: Explore scaling with 4 datasets (PTB-XL high-quality/small, EchoNext medium, larger/low-quality like MIMIC-IV-ECG/machine-generated). Fine-tune prototypes; test self-supervised variants (e.g., contrastive pre-training on unlabeled ECGs).
+Controls/Baselines: Small-scale only (low data/high quality) vs. large-scale (high data/low quality); supervised vs. self-supervised.
+Evaluations/Metrics: Scaling curves (AUROC vs. data size/label quality, reference data scaling laws papers like Kaplan et al. 2020); PTB-XL AUROC for direct eval (~0.91 reference), EchoNext embedding AUROC for quality (~0.8 reference); per-label metrics with CIs.
+Iteration/Risks: If scaling doesn't hold, adjust label noise levels; mitigate compute with subsampling.
+Outputs/Timeline: Plots/notebooks on scaling; ongoing after Phase 2, 1-2 weeks per variant.
 
 ### Methods and Setup
-- Load pre-trained ProtoECGNet weights from Sahil's shared PTB-XL model (using the multi-branch or 2D global branch for diffuse patterns).
+- Load pre-trained ProtoECGNet weights from original PTB-XL model (using the multi-branch or 2D global branch for diffuse patterns).
 - Extract embeddings and prototype activations from EchoNext dataset (all splits: train ~72k, val ~4.6k, test ~5.4k) via forward pass (no gradients, batch size 64 on GPU).
 - Use the adapted data loader from echonext_protoecg_adaptation.py to process EchoNext .npy waveforms and metadata, applying the same preprocessing (downsampling to 100 Hz, high-pass filter, standardization).
 - Compute correlations between activations/embeddings and SHD flags; train a linear probe (sklearn LogisticRegression) on train embeddings for SHD prediction, evaluate on val/test.
