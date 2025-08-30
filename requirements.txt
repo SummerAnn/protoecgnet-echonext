@@ -1,0 +1,15 @@
+torch==2.0.1
+numpy==1.24.4
+pandas==2.0.3
+scikit-learn==1.3.0
+scipy==1.10.1
+matplotlib==3.7.2
+seaborn==0.12.2
+notebook==7.0.6  # Modern notebook server
+ipykernel==6.25.2  # Kernel for Jupyter
+pre-commit==3.3.3
+black==23.7.0
+flake8==6.1.0
+isort==5.12.0
+~                                                                               
+~                         
