@@ -70,5 +70,3 @@ Training stable (42 epochs, val AUROC peak 0.7494). Components: CE 0.2579, clust
 - Per-label metrics/calibration.
 - Morphology branch/self-supervised extensions.
 
-Feedback/PRs welcome!
-```
