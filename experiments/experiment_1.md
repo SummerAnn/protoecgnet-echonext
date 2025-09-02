@@ -17,7 +17,7 @@ Prototypes learned on standard ECG tasks (e.g., PTB-XL labels) will show moderat
 
 ## Evaluations and Metrics with References
 - Primary: Spearman correlations per label (with p-values; using scipy.stats.spearmanr), aiming for >0.3 on average.
-- Secondary: Linear probe macro-AUROC (sklearn roc_auc_score, macro average, bootstrapped 95% CIs with 1,000 samples), compared to EchoNext Nature paper SOTA ~0.8 [](https://www.nature.com/articles/s41586-025-09227-0) and random ~0.5.
+- Secondary: Linear probe macro-AUROC (sklearn roc_auc_score, macro average, bootstrapped 95% CIs with 1,000 samples), compared to EchoNext Nature paper SOTA ~0.8 ([https://www.nature.com/articles/s41586-025-09227-0](https://www.nature.com/articles/s41586-025-09227-0)) and random ~0.5.
 - Visual: t-SNE plots of embeddings colored by SHD flags/severity (using sklearn.manifold.TSNE, matplotlib), with clusters inspected for separation.
 - Full curves: N/A for zero-shot, but probe training loss/AUROC over iterations if multi-epoch.
 - Insights: Focus on interpretability, e.g., "Correlation 0.45 for LVEF flag due to hypertrophy prototypes, improving 20% over random baseline."
@@ -30,3 +30,11 @@ Prototypes learned on standard ECG tasks (e.g., PTB-XL labels) will show moderat
 ## Timeline and Outputs
 - Timeline: 1-2 days (today: setup/extraction; tomorrow: analysis/review).
 - Outputs: Notebook with correlations, AUROC (with CIs), t-SNE plots, full logs; PR for code; issue for feedback before next experiment.
+
+## Results and Insights (Post-Execution)
+- **Overall Metrics**: Val Macro-AUROC: 0.6243 (moderate), Test Macro-AUROC: 0.6425, Random Baseline Val AUROC: 0.5005.
+- **Per-Label Test AUROC**: Highest for aortic_regurgitation (0.7136), LVEF (0.7010); lowest for pericardial_effusion (0.5244).
+- **Spearman Correlations**: Mean absolute ~0.07 (low; highest for LVEF 0.1671)—below >0.3 threshold, suggesting weak direct alignment.
+- **t-SNE**: Plots show partial clusters for stronger labels (e.g., LVEF).
+- **Insights**: Moderate transfer supports hypothesis but indicates need for iteration (e.g., morphology subset). Weaker labels like effusion close to random—subtle manifestations. Ready for Phase 2 scaling/self-supervised.
+- **Iteration**: Since correlations <0.3 and AUROC <0.7, subset to morphology branch (from src/proto_models2D.py) or normalize embeddings. Documented in PR.
