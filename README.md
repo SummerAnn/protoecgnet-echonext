@@ -57,10 +57,10 @@ Loads metadata for splits (train ~72k, val ~4.6k, test ~5.4k—EchoNext's provid
 2D global branch: Modified ResNet18 backbone, add on layers, prototypes (5 per label, 55 total), cosine similarities, linear classifier (~12M params).
 
 ## Loss and Training
-Full loss (BCE + clustering + separation + diversity + contrastive) with clamps. Joint stage: Adam, scheduler, early stopping, logging with AUROC.
+
 
 ## Results
-Training stable (42 epochs, val AUROC peak 0.7494). Components: CE 0.2579, clustering −3.2652, etc. Baseline vs. SOTA ~0.9; useful for SHD study.
+
 
 ## Future Plans
 - Prototype projection/top-K review.
